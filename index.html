@@ -86,14 +86,8 @@ input.error,select.error{border-color:#E66C37}
     <div class="step-body">
       <div class="field-group">
         <label for="dept">Department <span class="req">*</span></label>
-        <select id="dept" onchange="liveUpdate()">
-          <option value="">&#8212; Select department &#8212;</option>
-          <option>Marketing</option><option>Sales</option><option>Operations</option>
-          <option>Product</option><option>Technology</option><option>Finance</option>
-          <option>HR &amp; People</option><option>Leadership</option>
-          <option>Customer Experience</option><option>Other</option>
-        </select>
-        <div id="dept-error" class="field-error">Please select a department.</div>
+        <input type="text" id="dept" placeholder="e.g. Marketing" oninput="liveUpdate()">
+        <div id="dept-error" class="field-error">Please enter a department.</div>
       </div>
     </div>
     <hr class="divider">
@@ -118,6 +112,11 @@ input.error,select.error{border-color:#E66C37}
         <label for="phone">Phone Number</label>
         <input type="tel" id="phone" placeholder="e.g. +44 785 842 6190" oninput="liveUpdate()">
         <div class="field-hint">Optional &#8212; leave blank to hide.</div>
+      </div>
+      <div class="field-group">
+        <label for="mobile">Mobile Number</label>
+        <input type="tel" id="mobile" placeholder="e.g. +44 785 842 6190" oninput="liveUpdate()">
+        <div class="field-hint">Optional &#8212; add a mobile number in addition to (or instead of) the phone number above.</div>
       </div>
     </div>
     <hr class="divider">
@@ -188,13 +187,14 @@ const LINKS = {
   de:  { web:'https://www.abenteuerwege.de/?utm_source=outlook&utm_medium=email&utm_campaign=email_signature', fb:'https://www.facebook.com/abenteuerwegereisen/', ig:'https://www.instagram.com/abenteuerwegereisen/', yt:'https://www.youtube.com/@abenteuerwegereisen?sub_confirmation=1', group:'https://www.facebook.com/groups/abenteuerwegereisen/' }
 };
 const PHONE_LABEL = { uk:'Phone:', us:'Phone:', de:'Telefon:' };
+const MOBILE_LABEL = { uk:'Mobile:', us:'Mobile:', de:'Mobil:' };
 const EMAIL_LABEL = { uk:'Email:', us:'Email:', de:'E-Mail:' };
 let currentBU='', photoDataURL='', currentSignatureHTML='';
 
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtPhone(p){ return p.replace(/ /g,'&nbsp;'); }
 
-function buildSignatureHTML(bu, dept, name, title, email, phone, photo) {
+function buildSignatureHTML(bu, dept, name, title, email, phone, mobile, photo) {
   const l = LINKS[bu];
   const isMacs = bu !== 'de';
   const logo = isMacs ? IMG_MACS_LOGO : IMG_AW_LOGO;
@@ -208,6 +208,7 @@ function buildSignatureHTML(bu, dept, name, title, email, phone, photo) {
   const logoH = isMacs ? 44 : 65;
   const iconS = 28;
   const pl = PHONE_LABEL[bu];
+  const ml = MOBILE_LABEL[bu];
   const el = EMAIL_LABEL[bu];
 
   const photoCell = photo ? `
@@ -222,6 +223,13 @@ function buildSignatureHTML(bu, dept, name, title, email, phone, photo) {
     <tr>
       <td style="padding-top:2px;">
         <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;font-weight:bold;color:#3c7495;mso-line-height-rule:exactly;">${escHtml(pl)}&nbsp;</span><span dir="ltr" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;font-weight:bold;color:#003643;mso-line-height-rule:exactly;">${fmtPhone(escHtml(phone))}</span>
+      </td>
+    </tr>` : '';
+
+  const mobileHTML = mobile ? `
+    <tr>
+      <td style="padding-top:2px;">
+        <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;font-weight:bold;color:#3c7495;mso-line-height-rule:exactly;">${escHtml(ml)}&nbsp;</span><span dir="ltr" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;font-weight:bold;color:#003643;mso-line-height-rule:exactly;">${fmtPhone(escHtml(mobile))}</span>
       </td>
     </tr>` : '';
 
@@ -305,6 +313,7 @@ function buildSignatureHTML(bu, dept, name, title, email, phone, photo) {
     <td style="padding-top:4px;">
       <table border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         ${phoneHTML}
+        ${mobileHTML}
         ${emailHTML}
       </table>
     </td>
@@ -404,11 +413,12 @@ function renderPreview(html){
 function liveUpdate(){
   const name=document.getElementById('fullname').value.trim();
   const title=document.getElementById('jobtitle').value.trim();
-  const dept=document.getElementById('dept').value;
+  const dept=document.getElementById('dept').value.trim();
   const email=document.getElementById('email').value.trim();
   const phone=document.getElementById('phone').value.trim();
+  const mobile=document.getElementById('mobile').value.trim();
   if(!currentBU||!name||!title||!dept){document.getElementById('preview-status').innerHTML='<span class="status-badge status-pending">Fill in required fields</span>';return;}
-  currentSignatureHTML=buildSignatureHTML(currentBU,dept,name,title,email,phone,photoDataURL);
+  currentSignatureHTML=buildSignatureHTML(currentBU,dept,name,title,email,phone,mobile,photoDataURL);
   document.getElementById('preview-empty').style.display='none';
   document.getElementById('sig-iframe').style.display='block';
   renderPreview(currentSignatureHTML);
@@ -420,7 +430,7 @@ function liveUpdate(){
 function validateForm(){
   let v=true;
   if(!currentBU){document.getElementById('bu-error').classList.add('show');v=false;}
-  const d=document.getElementById('dept');if(!d.value){document.getElementById('dept-error').classList.add('show');d.classList.add('error');v=false;}else{document.getElementById('dept-error').classList.remove('show');d.classList.remove('error');}
+  const d=document.getElementById('dept');if(!d.value.trim()){document.getElementById('dept-error').classList.add('show');d.classList.add('error');v=false;}else{document.getElementById('dept-error').classList.remove('show');d.classList.remove('error');}
   const n=document.getElementById('fullname');if(!n.value.trim()){document.getElementById('fullname-error').classList.add('show');n.classList.add('error');v=false;}else{document.getElementById('fullname-error').classList.remove('show');n.classList.remove('error');}
   const j=document.getElementById('jobtitle');if(!j.value.trim()){document.getElementById('jobtitle-error').classList.add('show');j.classList.add('error');v=false;}else{document.getElementById('jobtitle-error').classList.remove('show');j.classList.remove('error');}
   return v;
